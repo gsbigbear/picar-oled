@@ -16,7 +16,7 @@ os.chdir(sys.path[0])
 # oled
 disp = Adafruit_SSD1306.SSD1306_128_32(rst=None)
 disp.begin()
-font = ImageFont.truetype("font/FreeSans.ttf", 14)
+font = ImageFont.truetype("FreeSans.ttf", 14)
 disp.clear()
 disp.display()
 
