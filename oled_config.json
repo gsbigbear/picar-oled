@@ -1,0 +1,71 @@
+{
+    "menu":[
+        {
+            "label":"+ Système info: \nIP ,BT",
+            "submenu":[
+                {
+                    "label":"{}",
+                    "status": "/bin/bash -c ' echo IP:$(hostname -I)';echo $(iwgetid | cut -d\\\" -f2);exit 0",
+                    "return_code_0":"",
+                    "tmux":false
+                },{
+                    "label":"Controleur BT : \n{}",
+                    "status": "ls /dev/input/js0 > /dev/null 2>&1 && hcitool dev  | grep hci | awk '{print $2} ' && exit 1 || echo absent && exit 0",
+                    "return_code_0":"/bin/bash -c 'sudo rfkill unblock bluetooth ;sudo service ds4drv restart'",
+                    "return_code_1":"/bin/bash -c 'sudo service ds4drv stop'",
+                    "tmux":false
+                },{
+                    "label":"< Retour"
+                }
+            ]
+        },{
+            "label":"+ Système config \nservices,éco,reboot ...",
+            "submenu":[
+                {
+                    "label":"Mode Eco : {}",
+                    "status": "sudo rfkill | grep \" blocked \" > /dev/null 2>&1 && echo actif && echo désactiver ? && exit 0 || echo inactif;echo activer ? && exit 1",
+                    "return_code_0":"/bin/bash -c 'echo ON ; sudo service telegraf start;sudo rfkill unblock bluetooth ; sudo rfkill unblock wifi;sudo /opt/vc/bin/tvservice -p; sudo service ds4drv start'",
+                    "return_code_1":"/bin/bash -c 'echo OFF ; sudo service telegraf stop;sudo service ds4drv stop; sudo rfkill block bluetooth ; sudo rfkill block wifi; sudo /opt/vc/bin/tvservice -o'",
+                    "tmux":false
+                },{
+                    "label":"Oled service \n restart?",
+                    "status": "exit 0",
+                    "return_code_0":"/bin/bash -c 'sudo service oled restart'",
+                    "tmux":false
+                },{
+                    "label":"Métrologie : \n{}", 
+                    "label_status": "systemctl list-units | egrep telegraf > /dev/null 2>&1 && echo stop et dump ? && exit 0 || echo stopped, start ? && exit 1",
+                    "return_code_0":"/bin/bash -c 'sudo service telegraf stop && scp /home/pi/toolz/telegraf/metrics_out/metrics.out pi@pi-docker.local:/home/pi/tig-docker/share/metrics.out.$(date +%s) && rm -f /home/pi/toolz/telegraf/metrics_out/metrics.out'",
+                    "return_code_1":"/bin/bash -c 'sudo service telegraf start'",
+                    "tmux":false
+                },{
+                    "label":"Reboot Pi ?",
+                    "status": "uptime",
+                    "return_code_0":"/bin/bash -c 'sudo reboot'",
+                    "tmux":false
+                },{
+                    "label":"Shutdown Pi ? \nuptime: {}",
+                    "status": "uptime",
+                    "return_code_0":"/bin/bash -c 'sudo shutdown -h now'",
+                    "tmux":false
+                },{
+                    "label":"< Retour"
+                }
+            ]
+        }  
+    ],
+    "pin_led":{
+        "blue":[21,16],
+        "white":[12,7],
+        "red":[25,23]
+        },
+    "pin_btn":{
+        "btn_left":19,
+        "btn_small":5,
+        "btn_right":22
+        },
+    "buzzer_cfg":{
+        "pin":13,
+        "init_freq":200      
+        }
+}

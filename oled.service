@@ -1,0 +1,12 @@
+ [Unit]
+ Description=2F2C - Oled IA RAcing 
+ After=multi-user.target
+
+ [Service]
+ Type=idle
+ User=pi
+ Group=pi
+ ExecStart=/bin/bash -c 'source /home/pi/projects/env/bin/activate && /home/pi/projects/env/bin/python3.7 /home/pi/menu-oled/oled_menu.py'
+
+ [Install]
+ WantedBy=multi-user.target
