@@ -28,15 +28,15 @@ os.chdir(sys.path[0])
 with open('./oled_config.json', 'r') as f: config = json.load(f)
 
 # dynamic config load drives - cars
-cars_path = "/home/pi/cars/"
-for path in glob.glob(cars_path+"*/"):
+cars_path = "/home/pi/copilot"
+for path in glob.glob(cars_path):
     profile = os.path.basename(os.path.dirname(path))
     drive_sub_menu=[]
     if path != '':
         drive_sub_menu.append({
                 "label":"Drive : {}".format(os.path.basename(profile))+"\n{}",
                 "status": "/bin/bash -c 'ps -ef | grep -v grep | grep \" manage.py \" > /dev/null 2>&1 && echo running, stop && exit 1 || echo idle, start && exit 0'",
-                "return_code_0":"cd /home/pi/cars/{} ; /home/pi/env/bin/python3.7 manage.py drive --js".format(profile),
+                "return_code_0":"cd {} ; /home/pi/projects/env/bin/python3.7 manage.py drive --js".format(cars_path),
                 "return_code_1":"purge_tmux",
                 "tmux":True,
             })
@@ -45,7 +45,7 @@ for path in glob.glob(cars_path+"*/"):
             drive_sub_menu.append({
                 "label":"Models : {}".format(filename)+"\n{}",
                 "status": "/bin/bash -c 'ps -ef | grep -v grep | grep \" manage.py \" > /dev/null 2>&1 && echo running, stop && exit 1 || echo idle, start && exit 0'",
-                "return_code_0":"cd /home/pi/cars/{} ; /home/pi/env/bin/python3.7 manage.py drive --model=models/{}".format(profile,filename),
+                "return_code_0":"cd {} ; /home/pi/projects/env/bin/python3.7 manage.py drive --model=models/{}".format(profile,filename),
                 "return_code_1":"purge_tmux",
                 "tmux":True,
             })
