@@ -33,12 +33,6 @@
                     "return_code_0":"/bin/bash -c 'sudo service oled restart'",
                     "tmux":false
                 },{
-                    "label":"Métrologie : \n{}", 
-                    "label_status": "systemctl list-units | egrep telegraf > /dev/null 2>&1 && echo stop et dump ? && exit 0 || echo stopped, start ? && exit 1",
-                    "return_code_0":"/bin/bash -c 'sudo service telegraf stop && scp /home/pi/toolz/telegraf/metrics_out/metrics.out pi@pi-docker.local:/home/pi/tig-docker/share/metrics.out.$(date +%s) && rm -f /home/pi/toolz/telegraf/metrics_out/metrics.out'",
-                    "return_code_1":"/bin/bash -c 'sudo service telegraf start'",
-                    "tmux":false
-                },{
                     "label":"Reboot Pi ?",
                     "status": "uptime",
                     "return_code_0":"/bin/bash -c 'sudo reboot'",

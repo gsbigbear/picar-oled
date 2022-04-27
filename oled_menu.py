@@ -40,17 +40,23 @@ for path in glob.glob(cars_path):
                 "return_code_1":"purge_tmux",
                 "tmux":True,
             })
-        for path in glob.glob("{}/{}/models/*.h5".format(cars_path,profile)) + glob.glob("{}/{}/models/*.tflite".format(cars_path,profile)):
+        for path in glob.glob("{}/models/*.h5".format(cars_path,profile)) + glob.glob("{}/{}/models/*.tflite".format(cars_path,profile)):
             filename = os.path.basename(path)
             drive_sub_menu.append({
-                "label":"Models : {}".format(filename)+"\n{}",
+                "label":"Modl: {}".format(filename)+"\n{}",
                 "status": "/bin/bash -c 'ps -ef | grep -v grep | grep \" manage.py \" > /dev/null 2>&1 && echo running, stop && exit 1 || echo idle, start && exit 0'",
-                "return_code_0":"cd {} ; /home/pi/projects/env/bin/python3.7 manage.py drive --model=models/{}".format(profile,filename),
+                "return_code_0":"cd {} ; /home/pi/projects/env/bin/python3.7 manage.py drive --model=models/{}".format(cars_path,filename),
                 "return_code_1":"purge_tmux",
                 "tmux":True,
             })
     if drive_sub_menu: 
         drive_sub_menu.append({"label":"< Retour"})
+        drive_sub_menu.append({
+                    "label":"Refresh model\nlist",
+                    "status": "exit 0",
+                    "return_code_0":"/bin/bash -c 'sudo service oled restart'",
+                    "tmux":False
+                })
         config['menu'].append({"label":"+ User : {}\n{} configs".format(profile,len(drive_sub_menu)-1),"submenu":drive_sub_menu})
 
 ### hat Gestion des boutons 
@@ -148,7 +154,7 @@ def run_command(command=None,tmux=False) :
 if __name__ == '__main__':
     pins_led = []
     pins_btn = []
-    menu_x, menu_y  = [ 0 , 0 ]
+    menu_x, menu_y  = [ len(config['menu']) -1 , 0 ] # on se positionne dans le menu drive
     btn_ack = True
     menu_loop_sleep = .5
     try :
