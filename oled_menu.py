@@ -40,12 +40,13 @@ for path in glob.glob(cars_path):
                 "return_code_1":"purge_tmux",
                 "tmux":True,
             })
-        for path in glob.glob("{}/models/*.h5".format(cars_path,profile)) + glob.glob("{}/{}/models/*.tflite".format(cars_path,profile)):
+        for path in glob.glob("{}/models/*.h5".format(cars_path,profile)) + glob.glob("{}/models/*.tflite".format(cars_path,profile)):
             filename = os.path.basename(path)
+            extra_args="--type tflite_linear" if 'tflite' in path else ""
             drive_sub_menu.append({
                 "label":"Modl: {}".format(filename)+"\n{}",
                 "status": "/bin/bash -c 'ps -ef | grep -v grep | grep \" manage.py \" > /dev/null 2>&1 && echo running, stop && exit 1 || echo idle, start && exit 0'",
-                "return_code_0":"cd {} ; /home/pi/projects/env/bin/python3.7 manage.py drive --model=models/{}".format(cars_path,filename),
+                "return_code_0":"cd {} ; /home/pi/projects/env/bin/python3.7 manage.py drive --model=models/{} {}".format(cars_path,filename,extra_args),
                 "return_code_1":"purge_tmux",
                 "tmux":True,
             })
@@ -138,7 +139,7 @@ def run_command(command=None,tmux=False) :
     if command == 'purge_tmux' : 
         command = "/usr/bin/tmux send-keys -t oled C-c;"
     elif tmux == True : 
-        command = 'tmux send -t oled "/home/pi/env/bin/activate ; {}" ENTER \;'.format(command)
+        command = 'tmux send -t oled "/home/pi/projects/env/bin/activate ; {}" ENTER \;'.format(command)
     if 'tmux' in command : # init du tmux oled si absent
         os.system("tmux has-session -t oled || tmux new -d -s oled") 
     print("Override command : {}".format(command))
