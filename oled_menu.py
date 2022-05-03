@@ -139,7 +139,7 @@ def run_command(command=None,tmux=False) :
     if command == 'purge_tmux' : 
         command = "/usr/bin/tmux send-keys -t oled C-c;"
     elif tmux == True : 
-        command = 'tmux send -t oled "/home/pi/projects/env/bin/activate ; {}" ENTER \;'.format(command)
+        command = 'tmux send -t oled "{}" ENTER \;'.format(command)
     if 'tmux' in command : # init du tmux oled si absent
         os.system("tmux has-session -t oled || tmux new -d -s oled") 
     print("Override command : {}".format(command))
