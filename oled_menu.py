@@ -40,13 +40,30 @@ for path in glob.glob(cars_path):
                 "return_code_1":"purge_tmux",
                 "tmux":True,
             })
+        # model testing
         for path in glob.glob("{}/models/*.h5".format(cars_path,profile)) + glob.glob("{}/models/*.tflite".format(cars_path,profile)):
             filename = os.path.basename(path)
             extra_args="--type tflite_linear" if 'tflite' in path else ""
+            if os.path.exists(path+ ".py"):
+                extra_args += " --myconfig=models/{}".format(filename+ ".py")
             drive_sub_menu.append({
                 "label":"Modl: {}".format(filename)+"\n{}",
                 "status": "/bin/bash -c 'ps -ef | grep -v grep | grep \" manage.py \" > /dev/null 2>&1 && echo running, stop && exit 1 || echo idle, start && exit 0'",
                 "return_code_0":"cd {} ; /home/pi/projects/env/bin/python3.7 manage.py drive --model=models/{} {}".format(cars_path,filename,extra_args),
+                "return_code_1":"purge_tmux",
+                "tmux":True,
+            })
+        # models OK
+        drive_model_ok=[]
+        for path in glob.glob("{}/models_ok/*.h5".format(cars_path,profile)) + glob.glob("{}/models_ok/*.tflite".format(cars_path,profile)):
+            filename = os.path.basename(path)
+            extra_args="--type=tflite_linear" if 'tflite' in path else ""
+            if os.path.exists(path+ ".py"):
+                extra_args += " --myconfig=models_ok/{}".format(filename+ ".py")
+            drive_model_ok.append({
+                "label":"MdlOK: {}".format(filename)+"\n{}",
+                "status": "/bin/bash -c 'ps -ef | grep -v grep | grep \" manage.py \" > /dev/null 2>&1 && echo running, stop && exit 1 || echo idle, start && exit 0'",
+                "return_code_0":"cd {} ; /home/pi/projects/env/bin/python3.7 manage.py drive --model=models_ok/{} {}".format(cars_path,filename,extra_args),
                 "return_code_1":"purge_tmux",
                 "tmux":True,
             })
@@ -59,6 +76,15 @@ for path in glob.glob(cars_path):
                     "tmux":False
                 })
         config['menu'].append({"label":"+ User : {}\n{} configs".format(profile,len(drive_sub_menu)-1),"submenu":drive_sub_menu})
+    if drive_model_ok:
+        drive_model_ok.append({"label":"< Retour"})
+        drive_model_ok.append({
+                    "label":"Refresh model\nlist",
+                    "status": "exit 0",
+                    "return_code_0":"/bin/bash -c 'sudo service oled restart'",
+                    "tmux":False
+                })
+        config['menu'].append({"label":"+ Models OK","submenu":drive_model_ok})
 
 ### hat Gestion des boutons 
 def init_btn():
