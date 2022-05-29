@@ -10,10 +10,10 @@ import traceback, zic
 from threading import Thread
 import glob, time, threading
 
-dict_to_play={"smland":{"title":"/home/pi/copilot/audio/smland.mp3","startpos":0,"timetoplay":1,"volume":0}}
+dict_to_play={"smland":{"title":"/home/pi/copilot/audio/smland.mp3","startpos":0,"timetoplay":.75,"volume":5}}
 
 def play_audio(dictplay,loop):
-    time.sleep(2.5)
+    time.sleep(2.2)
     for i in range(loop):
         try :
             result = os.system("mplayer -ao alsa:device=hw=1.0 -af volume={volume}:1 {title} -ss {startpos} -endpos {timetoplay}  >/dev/null 2>&1".format(**dictplay))
