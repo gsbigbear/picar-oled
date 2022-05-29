@@ -8,7 +8,22 @@ from PIL import ImageDraw
 from PIL import ImageFont
 import traceback, zic
 from threading import Thread
-import glob
+import glob, time, threading
+
+dict_to_play={"smland":{"title":"/home/pi/copilot/audio/smland.mp3","startpos":0,"timetoplay":1,"volume":0}}
+
+def play_audio(dictplay,loop):
+    time.sleep(2.5)
+    for i in range(loop):
+        try :
+            result = os.system("mplayer -ao alsa:device=hw=1.0 -af volume={volume}:1 {title} -ss {startpos} -endpos {timetoplay}  >/dev/null 2>&1".format(**dictplay))
+        except:
+            break
+        time.sleep(.5)
+
+def playsound(dictplay,loop=1):
+    thread = threading.Thread(target=play_audio, args=(dictplay,loop,))
+    thread.start()
 
 # GPIO mode
 GPIO.setmode(GPIO.BCM)
@@ -189,6 +204,7 @@ if __name__ == '__main__':
         init_btn()
         zic.setup(config['buzzer_cfg']['pin'])
         Thread(target=zic.play, args=(zic.melody[:14], zic.tempo, 1.3, .8)).start()
+        playsound(dict_to_play["smland"])
         waiting_action = refresh_menu(config['menu'],menu_x,menu_y)
         while True:
             if not btn_ack :
