@@ -59,8 +59,8 @@ for path in glob.glob(cars_path):
         for path in glob.glob("{}/models/*.h5".format(cars_path,profile)) + glob.glob("{}/models/*.tflite".format(cars_path,profile)):
             filename = os.path.basename(path)
             extra_args="--type tflite_linear" if 'tflite' in path else ""
-            if os.path.exists(path+ ".py"):
-                extra_args += " --myconfig=models/{}".format(filename+ ".py")
+            #if os.path.exists(path+ ".py"):
+            #    extra_args += " --myconfig=models/{}".format(filename+ ".py")
             drive_sub_menu.append({
                 "label":"Modl: {}".format(filename)+"\n{}",
                 "status": "/bin/bash -c 'ps -ef | grep -v grep | grep \" manage.py \" > /dev/null 2>&1 && echo running, stop && exit 1 || echo idle, start && exit 0'",
@@ -73,8 +73,8 @@ for path in glob.glob(cars_path):
         for path in glob.glob("{}/models_ok/*.h5".format(cars_path,profile)) + glob.glob("{}/models_ok/*.tflite".format(cars_path,profile)):
             filename = os.path.basename(path)
             extra_args="--type=tflite_linear" if 'tflite' in path else ""
-            if os.path.exists(path+ ".py"):
-                extra_args += " --myconfig=models_ok/{}".format(filename+ ".py")
+            #if os.path.exists(path+ ".py"):
+            #    extra_args += " --myconfig=models_ok/{}".format(filename+ ".py")
             drive_model_ok.append({
                 "label":"MdlOK: {}".format(filename)+"\n{}",
                 "status": "/bin/bash -c 'ps -ef | grep -v grep | grep \" manage.py \" > /dev/null 2>&1 && echo running, stop && exit 1 || echo idle, start && exit 0'",
