@@ -51,7 +51,7 @@ for path in glob.glob(cars_path):
         drive_sub_menu.append({
                 "label":"Drive : {}".format(os.path.basename(profile))+"\n{}",
                 "status": "/bin/bash -c 'ps -ef | grep -v grep | grep \" manage.py \" > /dev/null 2>&1 && echo running, stop && exit 1 || echo idle, start && exit 0'",
-                "return_code_0":"cd {} ; /home/pi/projects/env/bin/python3.7 manage.py drive --js".format(cars_path),
+                "return_code_0":"cd {} ; /home/pi/env/bin/python3.7 manage.py drive --js".format(cars_path),
                 "return_code_1":"purge_tmux",
                 "tmux":True,
             })
@@ -64,7 +64,7 @@ for path in glob.glob(cars_path):
             drive_sub_menu.append({
                 "label":"Modl: {}".format(filename)+"\n{}",
                 "status": "/bin/bash -c 'ps -ef | grep -v grep | grep \" manage.py \" > /dev/null 2>&1 && echo running, stop && exit 1 || echo idle, start && exit 0'",
-                "return_code_0":"cd {} ; /home/pi/projects/env/bin/python3.7 manage.py drive --model=models/{} {}".format(cars_path,filename,extra_args),
+                "return_code_0":"cd {} ; /home/pi/env/bin/python3.7 manage.py drive --model=models/{} {}".format(cars_path,filename,extra_args),
                 "return_code_1":"purge_tmux",
                 "tmux":True,
             })
@@ -79,7 +79,7 @@ for path in glob.glob(cars_path):
             drive_model_ok.append({
                 "label":"{}".format(filename)+"\n{}",
                 "status": "/bin/bash -c 'ps -ef | grep -v grep | grep \" manage.py \" > /dev/null 2>&1 && echo running, stop && exit 1 || echo idle, start && exit 0'",
-                "return_code_0":"cd {} ; /home/pi/projects/env/bin/python3.7 manage.py drive --model=models_ok/{} {}".format(cars_path,filename,extra_args),
+                "return_code_0":"cd {} ; /home/pi/env/bin/python3.7 manage.py drive --model=models_ok/{} {}".format(cars_path,filename,extra_args),
                 "return_code_1":"purge_tmux",
                 "tmux":True,
             })
