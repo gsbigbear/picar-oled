@@ -10,7 +10,7 @@ import traceback, zic
 from threading import Thread
 import glob, time, threading
 
-dict_to_play={"smland":{"title":"/home/pi/copilot/audio/smland.mp3","startpos":0,"timetoplay":.75,"volume":5}}
+dict_to_play={"smland":{"title":"/home/pi/picar/copilot/audio/smland.mp3","startpos":0,"timetoplay":.75,"volume":5}}
 
 def play_audio(dictplay,loop):
     time.sleep(2.2)
