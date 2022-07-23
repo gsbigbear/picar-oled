@@ -19,15 +19,9 @@
                 }
             ]
         },{
-            "label":"+ Système config \nservices,éco,reboot ...",
+            "label":"+ Système config \nservices,reboot ...",
             "submenu":[
                 {
-                    "label":"Mode Eco : {}",
-                    "status": "sudo rfkill | grep \" blocked \" > /dev/null 2>&1 && echo actif && echo désactiver ? && exit 0 || echo inactif;echo activer ? && exit 1",
-                    "return_code_0":"/bin/bash -c 'echo ON ; sudo service telegraf start;sudo rfkill unblock bluetooth ; sudo rfkill unblock wifi;sudo /opt/vc/bin/tvservice -p; sudo service ds4drv start'",
-                    "return_code_1":"/bin/bash -c 'echo OFF ; sudo service telegraf stop;sudo service ds4drv stop; sudo rfkill block bluetooth ; sudo rfkill block wifi; sudo /opt/vc/bin/tvservice -o'",
-                    "tmux":false
-                },{
                     "label":"Oled service \n restart?",
                     "status": "exit 0",
                     "return_code_0":"/bin/bash -c 'sudo service oled restart'",

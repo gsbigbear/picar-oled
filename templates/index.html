@@ -1,0 +1,62 @@
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<script src="/jquery-3.6.0.min.js"></script>
+
+<div class="container">
+    <button class=btn type="button" onclick="button(this)" id="btn_left" ><</button> 
+    <button class=btn type="button" onclick="button(this)" id="btn_right">></button>
+    <button class=btn-refresh onClick="window.location.reload();"><span class=reload>&#x21bb;</span></button> <br>
+    <button class=consolas type="button" onclick="button(this)" id="line_display" ></button> 
+</div>
+<div >
+  <iframe class="iframe" id="iframe"src=""></iframe>
+</div>
+<script type="text/javascript">
+  var getinfo = function(){
+    var url="/info";
+    $.get(url).then(function(data){ 
+      document.getElementById("line_display").innerHTML = data['line_display'].replace('\n', '<br>')
+    });
+  }
+
+  var button = function (el) {
+      var obj = JSON.stringify({'button':el.id})
+      if (el.id == "line_display") {var obj = JSON.stringify({'button':'btn_small'})}
+      $.post( "/info", obj )
+   }
+  
+  var  majurl = function(){
+    var ip = location.host.split(":", 1);
+    document.getElementById("iframe").contentWindow.document.location.href="http://"+ip+":8887/drive";
+  }
+  majurl();
+  setInterval(function () {
+    getinfo();
+  }, 500);
+
+</script>
+<style>
+  .btn{
+    height:20px;
+  }
+  .btn-refresh{
+    float:right;
+  }
+  .consolas {
+    font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+    width:150px;
+    height:50px;
+  }
+  .container {
+    position: absolute;
+    z-index: 1;
+  }
+
+  .iframe {
+    position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:0;
+  }
+  .reload {
+    font-family: Lucida Sans Unicode
+  }
+</style>

@@ -1,6 +1,6 @@
 #!/usr/bin/python3.7
 import RPi.GPIO as GPIO
-import sys, json, os, subprocess
+import sys, json, os, subprocess, multiprocessing, socket
 from time import sleep
 import Adafruit_SSD1306
 from PIL import Image
@@ -9,8 +9,12 @@ from PIL import ImageFont
 import traceback, zic
 from threading import Thread
 import glob, time, threading
+from tornado.httpserver import HTTPServer
+import asyncio
 
-dict_to_play={"smland":{"title":"/home/pi/picar/copilot/audio/smland.mp3","startpos":0,"timetoplay":.75,"volume":5}}
+manager = multiprocessing.Manager()
+
+dict_to_play={"smland":{"title":"/home/pi/picar/copilot/audio/smland.mp3","startpos":0,"timetoplay":.75,"volume":2}}
 
 def play_audio(dictplay,loop):
     time.sleep(2.2)
@@ -41,9 +45,14 @@ os.system("tmux has-session -t  oled || tmux new -d -s oled")
 #static config load
 os.chdir(sys.path[0])
 with open('./oled_config.json', 'r') as f: config = json.load(f)
-
+GlobalMap = manager.dict()
+GlobalMap['line_display']=''
+GlobalMap['btn_ack']=True
+GlobalMap['btn_action']=True
+GlobalMap['ip']=socket.gethostbyname(socket.gethostname())
+print(GlobalMap)
 # dynamic config load drives - cars
-cars_path = "/home/pi/copilot"
+cars_path = "/home/pi/picar"
 for path in glob.glob(cars_path):
     profile = os.path.basename(os.path.dirname(path))
     drive_sub_menu=[]
@@ -56,7 +65,7 @@ for path in glob.glob(cars_path):
                 "tmux":True,
             })
         # model testing
-        for path in glob.glob("{}/models/*.h5".format(cars_path,profile)) + glob.glob("{}/models/*.tflite".format(cars_path,profile)):
+        for path in glob.glob("{}/models/*.tflite".format(cars_path,profile)):
             filename = os.path.basename(path)
             extra_args="--type tflite_linear" if 'tflite' in path else ""
             #if os.path.exists(path+ ".py"):
@@ -65,21 +74,6 @@ for path in glob.glob(cars_path):
                 "label":"Modl: {}".format(filename)+"\n{}",
                 "status": "/bin/bash -c 'ps -ef | grep -v grep | grep \" manage.py \" > /dev/null 2>&1 && echo running, stop && exit 1 || echo idle, start && exit 0'",
                 "return_code_0":"cd {} ; /home/pi/env/bin/python3.7 manage.py drive --model=models/{} {}".format(cars_path,filename,extra_args),
-                "return_code_1":"purge_tmux",
-                "tmux":True,
-            })
-        # models OK
-        drive_model_ok=[]
-        #for path in glob.glob("{}/models_ok/*.h5".format(cars_path,profile)) + glob.glob("{}/models_ok/*.tflite".format(cars_path,profile)):
-        for path in glob.glob("{}/models_ok/*.tflite".format(cars_path,profile)):
-            filename = os.path.basename(path)
-            extra_args="--type=tflite_linear" if 'tflite' in path else ""
-            #if os.path.exists(path+ ".py"):
-            #    extra_args += " --myconfig=models_ok/{}".format(filename+ ".py")
-            drive_model_ok.append({
-                "label":"{}".format(filename)+"\n{}",
-                "status": "/bin/bash -c 'ps -ef | grep -v grep | grep \" manage.py \" > /dev/null 2>&1 && echo running, stop && exit 1 || echo idle, start && exit 0'",
-                "return_code_0":"cd {} ; /home/pi/env/bin/python3.7 manage.py drive --model=models_ok/{} {}".format(cars_path,filename,extra_args),
                 "return_code_1":"purge_tmux",
                 "tmux":True,
             })
@@ -92,16 +86,7 @@ for path in glob.glob(cars_path):
                     "tmux":False
                 })
         config['menu'].append({"label":"+ User : {}\n{} configs".format(profile,len(drive_sub_menu)-1),"submenu":drive_sub_menu})
-    if drive_model_ok:
-        drive_model_ok.append({"label":"< Retour"})
-        drive_model_ok.append({
-                    "label":"Refresh model\nlist",
-                    "status": "exit 0",
-                    "return_code_0":"/bin/bash -c 'sudo service oled restart'",
-                    "tmux":False
-                })
-        config['menu'].append({"label":"+ Models OK","submenu":drive_model_ok})
-
+ 
 ### hat Gestion des boutons 
 def init_btn():
     for pin,pin_id in config['pin_btn'].items() : 
@@ -114,8 +99,7 @@ def btn_left(*args):return button_pushed(sys._getframe().f_code.co_name)
 def btn_small(*args): return button_pushed(sys._getframe().f_code.co_name)
 def btn_right(*args):return button_pushed(sys._getframe().f_code.co_name)
 def button_pushed(pin_label):
-    global btn_ack, btn_action
-    if btn_ack == True : btn_action,btn_ack = pin_label,False # asynchrone
+    if GlobalMap['btn_ack'] == True : GlobalMap['btn_action'],GlobalMap['btn_ack'] = pin_label,False # asynchrone
 
 ### hat - init des leds
 def init_led() :
@@ -141,6 +125,7 @@ def led_switch(pin_ids,force=None,wait=0):
 
 # menu - message sur oled
 def show_oled(message) :
+    GlobalMap['line_display']=message
     disp.clear()
     disp.display()
     width = disp.width
@@ -159,16 +144,12 @@ def police(loop=5,wait=.1,to_play=[]):
 
 # menu - affichage oled
 def refresh_menu(menu,menu_x,menu_y):
-    print(menu_x)
-    print(menu_y)
     if menu_y == None : 
         show_oled(menu[menu_x]['label'])
         return None
     current = menu[menu_x]['submenu'][menu_y]
     if 'status' in current :
         result_code,result_str=run_command(current['status'],False)
-        print(result_code)
-        print(result_str)
         show_oled(current['label'].format(result_str))
         return [ current["return_code_{}".format(result_code)], current['tmux'] ]
     show_oled(current['label'])
@@ -177,14 +158,12 @@ def refresh_menu(menu,menu_x,menu_y):
 # lancement des commandes
 def run_command(command=None,tmux=False) :
     led_switch(white,True)
-    print("New command : {}".format(command))
     if command == 'purge_tmux' : 
         command = "/usr/bin/tmux send-keys -t oled C-c;"
     elif tmux == True : 
         command = 'tmux send -t oled "{}" ENTER \;'.format(command)
     if 'tmux' in command : # init du tmux oled si absent
         os.system("tmux has-session -t oled || tmux new -d -s oled") 
-    print("Override command : {}".format(command))
     
     sp = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE,stdin=None, shell=True)
     out, err = sp.communicate()
@@ -194,12 +173,54 @@ def run_command(command=None,tmux=False) :
     led_switch(white,False)
     return sp.returncode, out.decode("utf-8")
 
+import tornado.web 
+
+class MessageHandler(tornado.web.RequestHandler):
+    def initialize(self, shared_dict):
+        self.shared_dict = shared_dict
+
+    def get(self):
+        self.render("index.html", **self.shared_dict)
+
+    def post(self):
+        data = tornado.escape.json_decode(self.request.body)
+        print(data)
+
+class InfoHandler(tornado.web.RequestHandler):
+    def initialize(self, shared_dict):
+        self.shared_dict = shared_dict
+
+    def get(self):
+        self.write(dict(self.shared_dict))
+
+    def post(self):
+        data = tornado.escape.json_decode(self.request.body)
+        if 'button' in data: button_pushed(data['button'])
+
+async def runhttp():
+    tornado_settings = {
+        'static_path': 'templates',
+        'template_path': 'templates',
+        'debug': True
+    }
+    app = tornado.web.Application([(r"/jquery-3.6.0.min.js()",tornado.web.StaticFileHandler, {"path":'templates/jquery-3.6.0.min.js'}),
+                                   (r"/info", InfoHandler,dict(shared_dict=GlobalMap)),
+                                   (r"/", MessageHandler,dict(shared_dict=GlobalMap))
+    ],**tornado_settings)
+    app.listen(8888)
+    await asyncio.Event().wait()
+
+def run_tornado():
+    asyncio.run(runhttp())
+
 if __name__ == '__main__':
+    threadwww = multiprocessing.Process(target=run_tornado, args=())
+    threadwww.start()
     pins_led = []
     pins_btn = []
     menu_x, menu_y  = [ len(config['menu']) -1 , 0 ] # on se positionne dans le menu drive
-    btn_ack = True
-    menu_loop_sleep = .5
+    GlobalMap['btn_ack'] = True
+    menu_loop_sleep = .2
     try :
         init_led()
         init_btn()
@@ -208,24 +229,25 @@ if __name__ == '__main__':
         playsound(dict_to_play["smland"])
         waiting_action = refresh_menu(config['menu'],menu_x,menu_y)
         while True:
-            if not btn_ack :
+            if not GlobalMap['btn_ack'] :
                 led_switch(blue)
                 if menu_y == None : # cas menu racine
-                    if btn_action == "btn_small" : menu_y = 0
-                    elif btn_action == "btn_right" : menu_x = 0 if menu_x == len(config['menu']) - 1 else menu_x + 1
-                    elif btn_action == "btn_left": menu_x = menu_x - 1 if menu_x > 0 else len(config['menu']) - 1
+                    if GlobalMap['btn_action'] == "btn_small" : menu_y = 0
+                    elif GlobalMap['btn_action'] == "btn_right" : menu_x = 0 if menu_x == len(config['menu']) - 1 else menu_x + 1
+                    elif GlobalMap['btn_action'] == "btn_left": menu_x = menu_x - 1 if menu_x > 0 else len(config['menu']) - 1
                 else : # cas submenu
-                    if btn_action == "btn_small" :
+                    if GlobalMap['btn_action'] == "btn_small" :
                         if waiting_action == 'main_menu': menu_y = None
                         else : run_command(waiting_action[0],waiting_action[1])
-                    elif btn_action == "btn_right" : menu_y = 0 if menu_y == len(config['menu'][menu_x]['submenu'])- 1 else menu_y + 1
-                    elif btn_action == "btn_left": menu_y = menu_y - 1 if menu_y > 0 else len(config['menu'][menu_x]['submenu']) - 1 
+                    elif GlobalMap['btn_action'] == "btn_right" : menu_y = 0 if menu_y == len(config['menu'][menu_x]['submenu'])- 1 else menu_y + 1
+                    elif GlobalMap['btn_action'] == "btn_left": menu_y = menu_y - 1 if menu_y > 0 else len(config['menu'][menu_x]['submenu']) - 1 
                 waiting_action = refresh_menu(config['menu'],menu_x,menu_y)
-                btn_ack = True
+                GlobalMap['btn_ack'] = True
                 led_switch(blue)
             sleep(menu_loop_sleep)
     except Exception :
         traceback.print_exc()
+        threadwww.terminate() 
         pass
     finally:
         GPIO.cleanup([pin for pin in pins_led + pins_led + [config['buzzer_cfg']['pin']]])
