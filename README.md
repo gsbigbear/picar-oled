@@ -15,9 +15,10 @@ LCD-35
 
 kiosk
 
-    sudo apt-get install --no-install-recommends xserver-xorg x11-xserver-utils xinit openbox
-    sudo apt-get install --no-install-recommends chromium-browser
-    sudo nano /etc/xdg/openbox/autostart
+    sudo apt-get -y install --no-install-recommends xserver-xorg x11-xserver-utils xinit openbox
+    sudo apt-get -y install --no-install-recommends chromium-browser
+    
+sudo nano /etc/xdg/openbox/autostart
     
     xset -dpms            # turn off display power management system
     xset s noblank        # turn off screen blanking
@@ -31,7 +32,7 @@ kiosk
     # Run Chromium in kiosk mode
     chromium-browser  --noerrdialogs --disable-infobars --kiosk $KIOSK_URL
     
-    sudo nano ~/.bash_profile
+sudo nano ~/.bash_profile
     
     [[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && startx -- -nocursor
     
