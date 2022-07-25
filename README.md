@@ -31,5 +31,9 @@ kiosk
     # Run Chromium in kiosk mode
     chromium-browser  --noerrdialogs --disable-infobars --kiosk $KIOSK_URL
     
+    sudo nano ~/.bash_profile
+    
+    [[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && startx -- -nocursor
+    
     
     
